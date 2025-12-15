@@ -3,13 +3,21 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
-import 'timestamp.dart';
 import 'sensor_box.dart';
+import 'status_panel.dart';
+import 'remote_actions.dart';
+import 'light_settings.dart';
+import 'network_panel.dart';
 
 class PodContent extends StatelessWidget {
-  final DatabaseReference podRef;
+  final DatabaseReference lightPodRef;
+  final DatabaseReference lockerPodRef;
 
-  const PodContent({super.key, required this.podRef});
+  const PodContent({
+    super.key,
+    required this.lightPodRef,
+    required this.lockerPodRef,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,18 +29,20 @@ class PodContent extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _lightSensorGrid(podRef)),
+                Expanded(child: _lightSensorGrid(lightPodRef)),
                 const SizedBox(width: 24),
-                Expanded(child: TimestampWidget(podRef: podRef)),
+                Expanded(child: StatusPanel(podRef: lightPodRef)),
               ],
             ),
             const SizedBox(height: 24),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _placeholder('Remote Actions')),
+                Expanded(
+                    child: RemoteActions(
+                        lightPodRef: lightPodRef, lockerPodRef: lockerPodRef)),
                 const SizedBox(width: 24),
-                Expanded(child: _placeholder('Occupancy Forecast (24h)')),
+                Expanded(child: LightSettings(podRef: lightPodRef)),
               ],
             ),
             const SizedBox(height: 24),
@@ -41,7 +51,7 @@ class PodContent extends StatelessWidget {
               children: [
                 Expanded(child: _placeholder('Slot 04 Details')),
                 const SizedBox(width: 24),
-                Expanded(child: _placeholder('Future Card')),
+                Expanded(child: NetworkPanel()),
               ],
             ),
             const SizedBox(height: 40),
@@ -72,7 +82,7 @@ class PodContent extends StatelessWidget {
             const Text(
               'Light sensor data',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center, // centered title
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             Column(

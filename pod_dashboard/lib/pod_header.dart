@@ -1,92 +1,82 @@
 // lib/pod_header.dart
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
+import 'online_chip.dart';
+
 class PodHeader extends StatelessWidget {
-  const PodHeader({super.key});
+  final DatabaseReference podRef;
+
+  const PodHeader({super.key, required this.podRef});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       color: const Color(0xFFF5F5F5),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          bool smallScreen = constraints.maxWidth < 600;
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title + Online chip
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Pod Control: POD-GCT-001A',
-                      style: const TextStyle(
-                          fontSize: 28, fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  _onlineChip(),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Subtitle – adaptive
-              if (smallScreen)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _subtitleRow('IADE Central Hub'),
-                    const SizedBox(height: 8),
-                    _subtitleRow('Firmware: v2.3.1'),
-                  ],
-                )
-              else
-                Row(
-                  children: [
-                    _subtitleRow('IADE Central Hub'),
-                    const SizedBox(width: 20),
-                    _subtitleRow('Firmware: v2.3.1'),
-                  ],
-                ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _onlineChip() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.circle, color: Colors.green[700], size: 12),
-          const SizedBox(width: 8),
-          Text(
-            'Online',
-            style: TextStyle(
-                color: Colors.green[700], fontWeight: FontWeight.w500),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Pod Control: POD-GCT-001A',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              OnlineChip(podRef: podRef),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Wrap subtitle to next line on small screen
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 500) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Row(
+                      children: [
+                        Icon(Icons.star_border, size: 20, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text('IADE Central Hub',
+                            style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.description_outlined,
+                            size: 20, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text('Firmware: v2.3.1',
+                            style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: const [
+                  Icon(Icons.star_border, size: 20, color: Colors.grey),
+                  SizedBox(width: 8),
+                  Text('IADE Central Hub',
+                      style: TextStyle(color: Colors.grey)),
+                  SizedBox(width: 20),
+                  Icon(Icons.description_outlined,
+                      size: 20, color: Colors.grey),
+                  SizedBox(width: 8),
+                  Text('Firmware: v2.3.1',
+                      style: TextStyle(color: Colors.grey)),
+                ],
+              );
+            },
           ),
         ],
       ),
-    );
-  }
-
-  Widget _subtitleRow(String text) {
-    return Row(
-      children: [
-        Icon(Icons.star_border, size: 20, color: Colors.grey),
-        const SizedBox(width: 8),
-        Text(text, style: const TextStyle(color: Colors.grey)),
-      ],
     );
   }
 }

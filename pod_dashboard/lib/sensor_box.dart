@@ -42,7 +42,7 @@ class _SensorBoxState extends State<SensorBox> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -55,13 +55,13 @@ class _SensorBoxState extends State<SensorBox> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12), // smaller padding
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // center vertically
-          crossAxisAlignment: CrossAxisAlignment.center, // center horizontally
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.grey[600],
                 borderRadius: BorderRadius.circular(20),
@@ -69,13 +69,14 @@ class _SensorBoxState extends State<SensorBox> {
               child: Text(
                 widget.label,
                 style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+                    color: Colors.white, fontSize: 14), // smaller font
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               value.toString(),
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  fontSize: 24, fontWeight: FontWeight.bold), // smaller value
             ),
           ],
         ),

@@ -45,8 +45,13 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DatabaseReference podRef =
+    // Main pod for light
+    final DatabaseReference basePodRef =
         FirebaseDatabase.instance.ref('devices/Pod_01_base_01');
+
+    // Entrance pod for door/spot
+    final DatabaseReference entradaPodRef =
+        FirebaseDatabase.instance.ref('devices/Pod_01_entrada_01');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -61,10 +66,13 @@ class DashboardPage extends StatelessWidget {
                 child: Column(
                   children: [
                     TopBar(smallScreen: smallScreen),
-                    const PodHeader(),
+                    PodHeader(podRef: basePodRef),
                     Expanded(
                       child: SingleChildScrollView(
-                        child: PodContent(podRef: podRef),
+                        child: PodContent(
+                          lightPodRef: basePodRef,
+                          lockerPodRef: entradaPodRef,
+                        ),
                       ),
                     ),
                   ],
