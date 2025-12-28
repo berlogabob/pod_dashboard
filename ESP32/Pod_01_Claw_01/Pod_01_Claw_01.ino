@@ -27,25 +27,29 @@ FirebaseConfig config;
 
 // ==================== Пины ====================
 const int servoPin = 13;
-const int limitPin = 14;  // NC: HIGH = pressed
+const int closeSwitchPin = 14;  // NC: HIGH = pressed = полностью закрыто
+const int openSwitchPin = 15;   // NC: HIGH = pressed = полностью открыто
 
 Servo clawServo;
 
 // ==================== Настраиваемые переменные из Firebase ====================
-int stop_adjust = 0;           // по умолчанию 0, подстрой под свой серво (например 6)
-int opening_time_sec = 5;      // по умолчанию 5 сек
-int closing_time_sec = 5;      // по умолчанию 5 сек
+int stop_adjust = 0;           // по умолчанию 0, подстрой (например 6)
+int opening_time_sec = 5;
+int closing_time_sec = 5;
 
 // ==================== Состояние ====================
 int lock_state = 0;
-bool last_limit_pressed = false;
+bool last_close_pressed = false;
+bool last_open_pressed = false;
 int open_cycles = 0;
+int occupancy = 0;             // сколько раз был полностью открыт (использован)
 unsigned long process_start = 0;
 
 void setup() {
   Serial.begin(115200);
 
-  pinMode(limitPin, INPUT_PULLUP);
+  pinMode(closeSwitchPin, INPUT_PULLUP);
+  pinMode(openSwitchPin, INPUT_PULLUP);
   clawServo.attach(servoPin);
   applyStop();
   delay(500);
@@ -81,11 +85,13 @@ void setup() {
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 
-  // Создаём пути
+  // Создаём все пути автоматически
   ensurePath("lock_state", 0);
-  ensurePath("limit_switch", 0);
+  ensurePath("limit_switch", 0);      // закрытый свитч
+  ensurePath("open_switch", 0);       // открытый свитч
   ensurePath("open_cycles", 0);
-  ensurePath("stop_adjust", 0);
+  ensurePath("occupancy", 0);
+  ensurePath("stop_adjust", 6);       // дефолт 6 по твоему желанию
   ensurePath("opening_time_sec", 5);
   ensurePath("closing_time_sec", 5);
 
@@ -93,14 +99,14 @@ void setup() {
   int val;
   if (getFBInt("lock_state", val)) lock_state = val;
   if (getFBInt("open_cycles", val)) open_cycles = val;
+  if (getFBInt("occupancy", val)) occupancy = val;
   if (getFBInt("stop_adjust", val)) stop_adjust = val;
   if (getFBInt("opening_time_sec", val)) opening_time_sec = val;
   if (getFBInt("closing_time_sec", val)) closing_time_sec = val;
 
   Serial.println("Initial lock_state: " + String(lock_state));
   Serial.println("stop_adjust: " + String(stop_adjust));
-  Serial.println("opening_time_sec: " + String(opening_time_sec));
-  Serial.println("closing_time_sec: " + String(closing_time_sec));
+  Serial.println("occupancy: " + String(occupancy));
   applyStop();
 }
 
@@ -124,7 +130,6 @@ void loop() {
       }
     }
 
-    // Чтение настроек
     int new_val;
     if (getFBInt("stop_adjust", new_val) && new_val != stop_adjust) {
       stop_adjust = new_val;
@@ -143,23 +148,35 @@ void loop() {
     last_read = millis();
   }
 
-  // Лимит-свитч
-  bool current_pressed = (digitalRead(limitPin) == HIGH);
-  setFBInt("limit_switch", current_pressed ? 1 : 0);
+  // Первый свитч (закрытое положение)
+  bool close_pressed = (digitalRead(closeSwitchPin) == HIGH);
+  setFBInt("limit_switch", close_pressed ? 1 : 0);
 
-  // Отслеживание отжатия
-  if (last_limit_pressed && !current_pressed) {
+  // Второй свитч (открытое положение)
+  bool open_pressed = (digitalRead(openSwitchPin) == HIGH);
+  setFBInt("open_switch", open_pressed ? 1 : 0);
+
+  // Счётчик open_cycles (отжатие закрытого свитча)
+  if (last_close_pressed && !close_pressed) {
     open_cycles++;
     setFBInt("open_cycles", open_cycles);
-    Serial.println("Limit released → open_cycles = " + String(open_cycles));
+    Serial.println("Close switch released → open_cycles = " + String(open_cycles));
   }
-  last_limit_pressed = current_pressed;
+  last_close_pressed = close_pressed;
+
+  // Счётчик occupancy (отжатие открытого свитча — слот был использован)
+  if (last_open_pressed && !open_pressed) {
+    occupancy++;
+    setFBInt("occupancy", occupancy);
+    Serial.println("Open switch released → occupancy = " + String(occupancy));
+  }
+  last_open_pressed = open_pressed;
 
   // Управление серво
   if (lock_state == 3) {  // closing
     Serial.println("Closing started (CW)");
     rotateCW();
-    if (current_pressed) {
+    if (close_pressed) {
       localStopAndClosed();
     } else if (millis() - process_start >= closing_time_sec * 1000UL) {
       localStopAndOpen();
@@ -235,7 +252,7 @@ void localStopAndClosed() {
   open_cycles = 0;
   setFBInt("lock_state", 0);
   setFBInt("open_cycles", 0);
-  Serial.println("LOCALLY CLOSED → state 0, cycles reset");
+  Serial.println("LOCALLY CLOSED → state 0, open_cycles reset");
 }
 
 void localStopAndOpen() {
