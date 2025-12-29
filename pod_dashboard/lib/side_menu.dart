@@ -1,11 +1,14 @@
-// lib/side_menu.dart
-
 import 'package:flutter/material.dart';
 
 class SideMenu extends StatelessWidget {
   final bool collapsed;
+  final String selectedItem;
 
-  const SideMenu({super.key, this.collapsed = false});
+  const SideMenu({
+    super.key,
+    this.collapsed = false,
+    this.selectedItem = 'Dashboard',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,23 +41,48 @@ class SideMenu extends StatelessWidget {
           ),
           const Divider(height: 1),
           _menuItem(
-              icon: Icons.dashboard,
-              title: 'Dashboard',
-              selected: true,
-              collapsed: collapsed),
+            icon: Icons.dashboard,
+            title: 'Dashboard',
+            selected: selectedItem == 'Dashboard',
+            collapsed: collapsed,
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/dashboard');
+            },
+          ),
           _menuItem(
-              icon: Icons.build, title: 'Pod Builder', collapsed: collapsed),
+            icon: Icons.garage,
+            title: 'Parking Spot',
+            selected: selectedItem == 'Parking Spot',
+            collapsed: collapsed,
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/parking_spot');
+            },
+          ),
           _menuItem(
-              icon: Icons.apps, title: 'App Builder', collapsed: collapsed),
+            icon: Icons.build,
+            title: 'Pod Builder',
+            selected: selectedItem == 'Pod Builder',
+            collapsed: collapsed,
+          ),
           _menuItem(
-              icon: Icons.people,
-              title: 'Team & Account',
-              collapsed: collapsed),
+            icon: Icons.apps,
+            title: 'App Builder',
+            selected: selectedItem == 'App Builder',
+            collapsed: collapsed,
+          ),
+          _menuItem(
+            icon: Icons.people,
+            title: 'Team & Account',
+            selected: selectedItem == 'Team & Account',
+            collapsed: collapsed,
+          ),
           const Divider(height: 1),
           _menuItem(
-              icon: Icons.help_outline,
-              title: 'FAQ / Hardware Docs',
-              collapsed: collapsed),
+            icon: Icons.help_outline,
+            title: 'FAQ / Hardware Docs',
+            selected: selectedItem == 'FAQ / Hardware Docs',
+            collapsed: collapsed,
+          ),
         ],
       ),
     );
@@ -63,12 +91,14 @@ class SideMenu extends StatelessWidget {
   Widget _menuItem({
     required IconData icon,
     required String title,
+    required bool selected,
     required bool collapsed,
-    bool selected = false,
+    VoidCallback? onTap,
   }) {
     return Container(
       color: selected ? Colors.grey[300] : Colors.transparent,
       child: ListTile(
+        onTap: onTap,
         leading: Icon(
           icon,
           color: selected ? Colors.black : Colors.grey[600],
