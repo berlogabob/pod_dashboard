@@ -1,13 +1,12 @@
-// lib/main.dart
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 import 'side_menu.dart';
 import 'top_bar.dart';
-import 'pod_header.dart';
 import 'pod_content.dart';
+import 'online_chip.dart';
+import 'claw_control.dart';  // добавили импорт для ClawControl
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,9 +32,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: DashboardPage(),
+      initialRoute: '/dashboard',
+      routes: {
+        '/dashboard': (context) => const DashboardPage(),
+        '/parking_spot': (context) => const ParkingSpotPage(),
+      },
     );
   }
 }
@@ -45,42 +48,166 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Main pod for light
     final DatabaseReference basePodRef =
         FirebaseDatabase.instance.ref('devices/Pod_01_base_01');
-
-    // Entrance pod for door/spot
     final DatabaseReference entradaPodRef =
         FirebaseDatabase.instance.ref('devices/Pod_01_entrada_01');
 
+    bool isPhonePortrait = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool smallScreen = constraints.maxWidth <= 800;
-
-          return Row(
-            children: [
-              SideMenu(collapsed: smallScreen),
-              Expanded(
-                child: Column(
-                  children: [
-                    TopBar(smallScreen: smallScreen),
-                    PodHeader(podRef: basePodRef),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: PodContent(
-                          lightPodRef: basePodRef,
-                          lockerPodRef: entradaPodRef,
-                        ),
+      body: SafeArea(
+        child: Row(
+          children: [
+            SideMenu(collapsed: isPhonePortrait, selectedItem: 'Dashboard'),
+            Expanded(
+              child: Column(
+                children: [
+                  TopBar(smallScreen: isPhonePortrait),
+                  // Единый заголовок с подзаголовками и OnlineChip
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: isPhonePortrait
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Pod Control',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: const [
+                                  Icon(Icons.star_border, size: 20, color: Colors.grey),
+                                  SizedBox(width: 8),
+                                  Text('IADE Central Hub', style: TextStyle(color: Colors.grey)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: const [
+                                  Icon(Icons.description_outlined, size: 20, color: Colors.grey),
+                                  SizedBox(width: 8),
+                                  Text('Firmware: v2.3.1', style: TextStyle(color: Colors.grey)),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              OnlineChip(podRef: basePodRef),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Pod Control',
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: const [
+                                      Icon(Icons.star_border, size: 20, color: Colors.grey),
+                                      SizedBox(width: 8),
+                                      Text('IADE Central Hub', style: TextStyle(color: Colors.grey)),
+                                      SizedBox(width: 20),
+                                      Icon(Icons.description_outlined, size: 20, color: Colors.grey),
+                                      SizedBox(width: 8),
+                                      Text('Firmware: v2.3.1', style: TextStyle(color: Colors.grey)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              OnlineChip(podRef: basePodRef),
+                            ],
+                          ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: PodContent(
+                        lightPodRef: basePodRef,
+                        lockerPodRef: entradaPodRef,
+                        isPhonePortrait: isPhonePortrait,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ParkingSpotPage extends StatelessWidget {
+  const ParkingSpotPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    bool isPhonePortrait = MediaQuery.of(context).size.width < 600;
+
+    final DatabaseReference clawPodRef =
+        FirebaseDatabase.instance.ref('devices/Pod_01_Claw_01');
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: SafeArea(
+        child: Row(
+          children: [
+            SideMenu(collapsed: isPhonePortrait, selectedItem: 'Parking Spot'),
+            Expanded(
+              child: Column(
+                children: [
+                  TopBar(smallScreen: isPhonePortrait),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: isPhonePortrait
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Parking Spot Control',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              OnlineChip(podRef: clawPodRef),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Parking Spot Control',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              OnlineChip(podRef: clawPodRef),
+                            ],
+                          ),
+                  ),
+                  Expanded(
+                    child: ClawControl(clawPodRef: clawPodRef),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
