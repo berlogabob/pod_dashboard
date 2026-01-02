@@ -1,16 +1,42 @@
 # pod_dashboard
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+pod_dashboard/
+├── lib/
+│   ├── main.dart
+│   ├── side_menu.dart
+│   ├── top_bar.dart
+│   ├── pod_content.dart
+│   ├── online_chip.dart
+│   ├── claw_control.dart
+│   ├── gesture_control.dart                  # ← UPDATED with native camera + ML
+│   ├── sensor_box.dart
+│   ├── status_panel.dart
+│   ├── light_settings.dart
+│   ├── network_panel.dart
+│   ├── timestamp.dart
+│   ├── wifi_switch.dart
+│   ├── remote_actions.dart
+│   ├── pod_header.dart
+│   ├── sensor_grid.dart
+│   │
+│   ├── models/
+│   │   └── gesture_status.dart               # new
+│   │
+│   ├── utils/
+│   │   ├── constants.dart                    # new
+│   │   ├── gesture_recognizer.dart           # new
+│   │   └── transform_utils.dart              # new
+│   │
+│   ├── painters/
+│   │   ├── gesture_painter.dart              # new
+│   │   └── landmark_painter.dart             # new
+│   │
+│   └── widgets/
+│       ├── status_overlay.dart               # new
+│       └── detection_controls.dart           # new
+│
+├── android/
+├── ios/
+├── test/
+├── pubspec.yaml                              # ← UPDATED with new dependencies
+└── assets/                                   # you can now delete hand_gesture.html
