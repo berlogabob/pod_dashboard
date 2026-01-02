@@ -1,5 +1,5 @@
 # pod_dashboard
-
+```
 pod_dashboard/
 ├── lib/
 │   ├── main.dart
@@ -40,3 +40,4 @@ pod_dashboard/
 ├── test/
 ├── pubspec.yaml                              # ← UPDATED with new dependencies
 └── assets/                                   # you can now delete hand_gesture.html
+```
