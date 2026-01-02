@@ -1,5 +1,3 @@
-// lib/network_panel.dart
-
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
@@ -43,9 +41,11 @@ class _NetworkPanelState extends State<NetworkPanel> {
         final conn = settings?['connection_package'] as Map<Object?, Object?>?;
         int interval = conn?['send_interval'] as int? ?? 5;
 
-        setState(() {
-          onlineStatus[device] = true;
-        });
+        if (mounted) {
+          setState(() {
+            onlineStatus[device] = true;
+          });
+        }
 
         timers[device]?.cancel();
 
@@ -66,6 +66,7 @@ class _NetworkPanelState extends State<NetworkPanel> {
     for (var timer in timers.values) {
       timer?.cancel();
     }
+    timers.clear();
     super.dispose();
   }
 

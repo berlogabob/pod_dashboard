@@ -67,7 +67,7 @@ class _WiFiSwitchState extends State<WiFiSwitch> {
                 ),
                 Switch(
                   value: isHotspot,
-                  activeColor: Colors.blue,
+                  activeThumbColor: Colors.blue,
                   onChanged: _setMode,
                 ),
               ],

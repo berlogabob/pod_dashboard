@@ -35,9 +35,9 @@ class PodHeader extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth < 500) {
-                return Column(
+                return const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Row(
                       children: [
                         Icon(Icons.star_border, size: 20, color: Colors.grey),
@@ -59,8 +59,8 @@ class PodHeader extends StatelessWidget {
                   ],
                 );
               }
-              return Row(
-                children: const [
+              return const Row(
+                children: [
                   Icon(Icons.star_border, size: 20, color: Colors.grey),
                   SizedBox(width: 8),
                   Text('IADE Central Hub',

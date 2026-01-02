@@ -141,7 +141,7 @@ class _RemoteActionsState extends State<RemoteActions> {
                   const SizedBox(width: 12),
                   Switch(
                     value: manualOverride,
-                    activeColor: Colors.orange,
+                    activeThumbColor: Colors.orange,
                     onChanged: _setOverride,
                   ),
                 ],
@@ -161,7 +161,7 @@ class _RemoteActionsState extends State<RemoteActions> {
                   const SizedBox(width: 12),
                   Switch(
                     value: manualToggle,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                     onChanged: manualOverride ? _setToggle : null,
                   ),
                 ],
@@ -187,7 +187,7 @@ class _RemoteActionsState extends State<RemoteActions> {
                   const SizedBox(width: 12),
                   Switch(
                     value: doorStatus == 2,
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     onChanged: isProcessingDoor ? null : (v) => _setDoor(v),
                   ),
                 ],
@@ -213,7 +213,7 @@ class _RemoteActionsState extends State<RemoteActions> {
                   const SizedBox(width: 12),
                   Switch(
                     value: spotStatus == 2,
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     onChanged: isProcessingSpot ? null : (v) => _setSpot(v),
                   ),
                 ],

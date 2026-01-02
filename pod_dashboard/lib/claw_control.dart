@@ -1,5 +1,5 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class ClawControl extends StatefulWidget {
   final DatabaseReference clawPodRef;
@@ -27,7 +27,7 @@ class _ClawControlState extends State<ClawControl> {
     });
   }
 
-  Color getButtonColor() {
+  Color getBaseColor() {
     switch (lockState) {
       case 0:
         return Colors.green[600]!;
@@ -51,9 +51,9 @@ class _ClawControlState extends State<ClawControl> {
   }
 
   void _onTap() {
-    if (isProcessing()) return;  // блокируем нажатие во время перехода
+    if (isProcessing()) return;
 
-    int newState = lockState == 0 ? 1 : 3;  // 0 → opening, 2 → closing
+    int newState = lockState == 0 ? 1 : 3;
     widget.clawPodRef.child('lock_state').set(newState);
   }
 
@@ -85,7 +85,9 @@ class _ClawControlState extends State<ClawControl> {
                     width: 220,
                     height: 220,
                     decoration: BoxDecoration(
-                      color: getButtonColor(),
+                      color: isProcessing()
+                          ? getBaseColor().withAlpha(128)
+                          : getBaseColor(),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(

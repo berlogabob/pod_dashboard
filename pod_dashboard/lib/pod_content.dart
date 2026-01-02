@@ -25,7 +25,7 @@ class PodContent extends StatelessWidget {
     Widget statusPanel = StatusPanel(podRef: lightPodRef);
     Widget remoteActions = RemoteActions(lightPodRef: lightPodRef, lockerPodRef: lockerPodRef);
     Widget lightSettings = LightSettings(podRef: lightPodRef);
-    Widget networkPanel = NetworkPanel();
+    Widget networkPanel = const NetworkPanel();
 
     if (isPhonePortrait) {
       // На телефоне — всё в столбец

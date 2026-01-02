@@ -6,11 +6,11 @@ import 'side_menu.dart';
 import 'top_bar.dart';
 import 'pod_content.dart';
 import 'online_chip.dart';
-import 'claw_control.dart';  // добавили импорт для ClawControl
+import 'claw_control.dart';
+import 'gesture_control.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
     options: const FirebaseOptions(
       apiKey: "AIzaSyBydwUR2hcQgpyMbcCTiRH86gWZaDKKXR4",
@@ -23,7 +23,6 @@ void main() async {
       appId: "1:297718966154:web:b2c07b0d9a1fdfb6f8ca73",
     ),
   );
-
   runApp(const MyApp());
 }
 
@@ -65,7 +64,6 @@ class DashboardPage extends StatelessWidget {
               child: Column(
                 children: [
                   TopBar(smallScreen: isPhonePortrait),
-                  // Единый заголовок с подзаголовками и OnlineChip
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: isPhonePortrait
@@ -201,7 +199,14 @@ class ParkingSpotPage extends StatelessWidget {
                           ),
                   ),
                   Expanded(
-                    child: ClawControl(clawPodRef: clawPodRef),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          ClawControl(clawPodRef: clawPodRef),
+                          GestureControl(clawPodRef: clawPodRef),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
