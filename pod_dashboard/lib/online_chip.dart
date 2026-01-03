@@ -1,3 +1,5 @@
+// lib/online_chip.dart
+
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
@@ -18,13 +20,13 @@ class _OnlineChipState extends State<OnlineChip> {
   bool isOnline = false;
 
   Timer? _timer;
-  late StreamSubscription<DatabaseEvent> _subscription;
 
   @override
   void initState() {
     super.initState();
 
-    _subscription = widget.podRef.onValue.listen((DatabaseEvent event) {
+    // Sync from Firebase all time
+    widget.podRef.onValue.listen((event) {
       final data = event.snapshot.value as Map<Object?, Object?>?;
       if (data == null) return;
 
@@ -32,8 +34,6 @@ class _OnlineChipState extends State<OnlineChip> {
       final settings = data['settings'] as Map<Object?, Object?>?;
       final conn = settings?['connection_package'] as Map<Object?, Object?>?;
       int newInterval = conn?['send_interval'] as int? ?? 5;
-
-      if (!mounted) return;
 
       setState(() {
         lastTimestamp = newTimestamp;
@@ -45,10 +45,11 @@ class _OnlineChipState extends State<OnlineChip> {
 
       int maxWait = sendInterval * 10;
       _timer = Timer(Duration(seconds: maxWait), () {
-        if (!mounted) return;
-        setState(() {
-          isOnline = false;
-        });
+        if (mounted) {
+          setState(() {
+            isOnline = false;
+          });
+        }
       });
     });
   }
@@ -56,7 +57,6 @@ class _OnlineChipState extends State<OnlineChip> {
   @override
   void dispose() {
     _timer?.cancel();
-    _subscription.cancel();
     super.dispose();
   }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/constants.dart';
+import 'package:pod_dashboard/gesture_camera/constants.dart';
 
 class GesturePainter extends CustomPainter {
   final String emoji;

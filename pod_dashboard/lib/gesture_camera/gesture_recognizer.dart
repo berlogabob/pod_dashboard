@@ -1,5 +1,5 @@
 import 'package:hand_landmarker/hand_landmarker.dart';
-import '../models/gesture_status.dart';
+import 'package:pod_dashboard/gesture_camera/gesture_status.dart';
 import 'constants.dart';
 
 class GestureRecognizer {
@@ -17,7 +17,7 @@ class GestureRecognizer {
     final pinkyMcp = landmarks[17];
     final wrist = landmarks[0];
 
-    // OK gesture – priority (but we will ignore it for trigger)
+    // OK gesture – priority
     final thumbIndexDist =
         (thumbTip.x - indexTip.x).abs() + (thumbTip.y - indexTip.y).abs();
     final middleDist =
@@ -31,10 +31,10 @@ class GestureRecognizer {
         middleDist > GestureThresholds.okExtendedFingerDist &&
         ringDist > GestureThresholds.okExtendedFingerDist &&
         pinkyDist > GestureThresholds.okExtendedFingerDist) {
-      return GestureStatus.ok; // Detected but will be ignored in trigger
+      return GestureStatus.ok;
     }
 
-    // Check other 4 fingers folded for thumbs up/down
+    // Check other 4 fingers are folded
     final tips = [8, 12, 16, 20];
     final mcps = [5, 9, 13, 17];
     bool folded = true;

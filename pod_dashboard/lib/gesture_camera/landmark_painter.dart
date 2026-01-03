@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hand_landmarker/hand_landmarker.dart';
-import '../utils/transform_utils.dart';
-import '../utils/constants.dart';
+import 'package:pod_dashboard/gesture_camera/transform_utils.dart';
+import 'package:pod_dashboard/gesture_camera/constants.dart';
 
 class LandmarkPainter extends CustomPainter {
   final List<Landmark> landmarks;
