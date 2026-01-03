@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -5,12 +6,20 @@ import 'package:flutter/material.dart';
 import 'side_menu.dart';
 import 'top_bar.dart';
 import 'pod_content.dart';
-import 'online_chip.dart';
 import 'claw_control.dart';
 import 'gesture_control.dart';
 
+List<CameraDescription> cameras = [];
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    cameras = await availableCameras();
+  } catch (e) {
+    cameras = [];
+  }
+
   await Firebase.initializeApp(
     options: const FirebaseOptions(
       apiKey: "AIzaSyBydwUR2hcQgpyMbcCTiRH86gWZaDKKXR4",
@@ -23,6 +32,7 @@ void main() async {
       appId: "1:297718966154:web:b2c07b0d9a1fdfb6f8ca73",
     ),
   );
+
   runApp(const MyApp());
 }
 
@@ -69,32 +79,35 @@ class DashboardPage extends StatelessWidget {
                     child: isPhonePortrait
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
+                            children: const [
+                              Text(
                                 'Pod Control',
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               Row(
-                                children: const [
-                                  Icon(Icons.star_border, size: 20, color: Colors.grey),
+                                children: [
+                                  Icon(Icons.star_border,
+                                      size: 20, color: Colors.grey),
                                   SizedBox(width: 8),
-                                  Text('IADE Central Hub', style: TextStyle(color: Colors.grey)),
+                                  Text('IADE Central Hub',
+                                      style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4),
                               Row(
-                                children: const [
-                                  Icon(Icons.description_outlined, size: 20, color: Colors.grey),
+                                children: [
+                                  Icon(Icons.description_outlined,
+                                      size: 20, color: Colors.grey),
                                   SizedBox(width: 8),
-                                  Text('Firmware: v2.3.1', style: TextStyle(color: Colors.grey)),
+                                  Text('Firmware: v2.3.1',
+                                      style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              OnlineChip(podRef: basePodRef),
+                              SizedBox(height: 8),
                             ],
                           )
                         : Row(
@@ -102,29 +115,32 @@ class DashboardPage extends StatelessWidget {
                             children: [
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
+                                children: const [
+                                  Text(
                                     'Pod Control',
                                     style: TextStyle(
                                       fontSize: 28,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  SizedBox(height: 8),
                                   Row(
-                                    children: const [
-                                      Icon(Icons.star_border, size: 20, color: Colors.grey),
+                                    children: [
+                                      Icon(Icons.star_border,
+                                          size: 20, color: Colors.grey),
                                       SizedBox(width: 8),
-                                      Text('IADE Central Hub', style: TextStyle(color: Colors.grey)),
+                                      Text('IADE Central Hub',
+                                          style: TextStyle(color: Colors.grey)),
                                       SizedBox(width: 20),
-                                      Icon(Icons.description_outlined, size: 20, color: Colors.grey),
+                                      Icon(Icons.description_outlined,
+                                          size: 20, color: Colors.grey),
                                       SizedBox(width: 8),
-                                      Text('Firmware: v2.3.1', style: TextStyle(color: Colors.grey)),
+                                      Text('Firmware: v2.3.1',
+                                          style: TextStyle(color: Colors.grey)),
                                     ],
                                   ),
                                 ],
                               ),
-                              OnlineChip(podRef: basePodRef),
                             ],
                           ),
                   ),
@@ -166,35 +182,36 @@ class ParkingSpotPage extends StatelessWidget {
             Expanded(
               child: Column(
                 children: [
-                  TopBar(smallScreen: isPhonePortrait),
+                  TopBar(
+                    smallScreen: isPhonePortrait,
+                    showSearch: false,
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: isPhonePortrait
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
+                            children: const [
+                              Text(
                                 'Parking Spot Control',
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              OnlineChip(podRef: clawPodRef),
+                              SizedBox(height: 8),
                             ],
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
+                            children: const [
+                              Text(
                                 'Parking Spot Control',
                                 style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              OnlineChip(podRef: clawPodRef),
                             ],
                           ),
                   ),

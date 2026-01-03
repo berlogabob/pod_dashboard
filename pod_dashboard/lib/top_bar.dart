@@ -1,11 +1,14 @@
-// lib/top_bar.dart
-
 import 'package:flutter/material.dart';
 
 class TopBar extends StatelessWidget {
   final bool smallScreen;
+  final bool showSearch;
 
-  const TopBar({super.key, this.smallScreen = false});
+  const TopBar({
+    super.key,
+    this.smallScreen = false,
+    this.showSearch = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,7 @@ class TopBar extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          if (!smallScreen)
+          if (!smallScreen && showSearch)
             SizedBox(
               width: 320,
               child: TextField(
@@ -41,6 +44,8 @@ class TopBar extends StatelessWidget {
                 ),
               ),
             )
+          else if (!smallScreen)
+            const SizedBox(width: 320)
           else
             IconButton(
               icon: const Icon(Icons.search, color: Colors.grey),

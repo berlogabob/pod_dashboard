@@ -1,42 +1,24 @@
-import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 
-class GestureControl extends StatefulWidget {
+import '../pages/gesture_camera_page.dart'; // Import the page
+import '../main.dart';
+
+class GestureControl extends StatelessWidget {
   final DatabaseReference clawPodRef;
 
   const GestureControl({super.key, required this.clawPodRef});
 
-  @override
-  State<GestureControl> createState() => _GestureControlState();
-}
-
-class _GestureControlState extends State<GestureControl> {
-  bool isEnabled = false;
-  late WebViewController controller;
-
-  @override
-  void initState() {
-    super.initState();
-
-    controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
-      ..addJavaScriptChannel(
-        'gestureHandler',
-        onMessageReceived: (JavaScriptMessage message) {
-          String gesture = message.message;
-          if (gesture == 'thumbs_up') {
-            widget.clawPodRef.child('lock_state').set(3);
-          } else if (gesture == 'thumbs_down') {
-            widget.clawPodRef.child('lock_state').set(1);
-          }
-        },
-      );
-  }
-
-  void _loadCamera() {
-    controller.loadFlutterAsset('assets/hand_gesture.html');
+  void _openCamera(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GestureCameraPage(
+          clawPodRef: clawPodRef,
+          cameras: cameras,
+        ),
+      ),
+    );
   }
 
   @override
@@ -48,7 +30,7 @@ class _GestureControlState extends State<GestureControl> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
+            color: Colors.grey.withValues(alpha: 0.15),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -59,33 +41,25 @@ class _GestureControlState extends State<GestureControl> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Gesture Control',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      isEnabled = !isEnabled;
-                      if (isEnabled) {
-                        _loadCamera();
-                      }
-                    });
-                  },
-                  child: Text(isEnabled ? 'Disable' : 'Enable'),
-                ),
-              ],
+            const Text(
+              'Gesture Control',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            if (isEnabled)
-              SizedBox(
-                width: 300,
-                height: 300,
-                child: WebViewWidget(controller: controller),
+            const SizedBox(height: 32),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () => _openCamera(context),
+                icon: const Icon(Icons.camera_alt, size: 32),
+                label: const Text(
+                  'Start Gesture Detection',
+                  style: TextStyle(fontSize: 18),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                ),
               ),
+            ),
           ],
         ),
       ),

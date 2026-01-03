@@ -10,7 +10,7 @@ import 'network_panel.dart';
 class PodContent extends StatelessWidget {
   final DatabaseReference lightPodRef;
   final DatabaseReference lockerPodRef;
-  final bool isPhonePortrait;  // новый флаг
+  final bool isPhonePortrait; // новый флаг
 
   const PodContent({
     super.key,
@@ -23,7 +23,8 @@ class PodContent extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget lightSensorGrid = _lightSensorGrid(lightPodRef);
     Widget statusPanel = StatusPanel(podRef: lightPodRef);
-    Widget remoteActions = RemoteActions(lightPodRef: lightPodRef, lockerPodRef: lockerPodRef);
+    Widget remoteActions =
+        RemoteActions(lightPodRef: lightPodRef, lockerPodRef: lockerPodRef);
     Widget lightSettings = LightSettings(podRef: lightPodRef);
     Widget networkPanel = const NetworkPanel();
 
@@ -93,7 +94,7 @@ class PodContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
+            color: Colors.grey.withValues(alpha: 0.15),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -114,17 +115,33 @@ class PodContent extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(child: SensorBox(sensorId: 'sensor0', label: 'SL01', podRef: podRef)),
+                    Expanded(
+                        child: SensorBox(
+                            sensorId: 'sensor0',
+                            label: 'SL01',
+                            podRef: podRef)),
                     const SizedBox(width: 12),
-                    Expanded(child: SensorBox(sensorId: 'sensor1', label: 'SL02', podRef: podRef)),
+                    Expanded(
+                        child: SensorBox(
+                            sensorId: 'sensor1',
+                            label: 'SL02',
+                            podRef: podRef)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: SensorBox(sensorId: 'sensor2', label: 'SL03', podRef: podRef)),
+                    Expanded(
+                        child: SensorBox(
+                            sensorId: 'sensor2',
+                            label: 'SL03',
+                            podRef: podRef)),
                     const SizedBox(width: 12),
-                    Expanded(child: SensorBox(sensorId: 'sensor3', label: 'SL04', podRef: podRef)),
+                    Expanded(
+                        child: SensorBox(
+                            sensorId: 'sensor3',
+                            label: 'SL04',
+                            podRef: podRef)),
                   ],
                 ),
               ],
@@ -142,7 +159,7 @@ class PodContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
+            color: Colors.grey.withValues(alpha: 0.15),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),

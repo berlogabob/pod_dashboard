@@ -1,3 +1,5 @@
+// lib/claw_control.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -11,50 +13,56 @@ class ClawControl extends StatefulWidget {
 }
 
 class _ClawControlState extends State<ClawControl> {
-  int lockState = 0;
+  int lockState = 0; // 0 closed, 1 opening, 2 open, 3 closing
 
   @override
   void initState() {
     super.initState();
-
     widget.clawPodRef.child('lock_state').onValue.listen((event) {
       final val = event.snapshot.value as int? ?? 0;
-      if (val >= 0 && val <= 3) {
-        setState(() {
-          lockState = val;
-        });
+      if (val >= 0 && val <= 3 && mounted) {
+        setState(() => lockState = val);
       }
     });
   }
 
   Color getBaseColor() {
     switch (lockState) {
-      case 0:
+      case 0: // Locked → GREEN (safe)
         return Colors.green[600]!;
-      case 2:
-        return Colors.red[600]!;
-      case 1:
+      case 1: // Opening → BLUE
         return Colors.blue[600]!;
-      case 3:
-        return Colors.amber[700]!;
+      case 2: // Unlocked → RED (danger / open)
+        return Colors.red[600]!;
+      case 3: // Closing → ORANGE
+        return Colors.orange[700]!;
       default:
         return Colors.grey;
     }
   }
 
-  String getButtonText() {
-    return lockState == 2 ? 'Lock' : 'Unlock';
+  String getMainText() {
+    switch (lockState) {
+      case 0:
+        return 'Locked';
+      case 1:
+        return 'Opening...';
+      case 2:
+        return 'Unlocked';
+      case 3:
+        return 'Closing...';
+      default:
+        return 'Unknown';
+    }
   }
 
-  bool isProcessing() {
-    return lockState == 1 || lockState == 3;
-  }
+  String getActionText() => lockState == 2 ? 'Lock' : 'Unlock';
+
+  bool get isProcessing => lockState == 1 || lockState == 3;
 
   void _onTap() {
-    if (isProcessing()) return;
-
-    int newState = lockState == 0 ? 1 : 3;
-    widget.clawPodRef.child('lock_state').set(newState);
+    if (isProcessing) return;
+    widget.clawPodRef.child('lock_state').set(lockState == 0 ? 1 : 3);
   }
 
   @override
@@ -68,7 +76,7 @@ class _ClawControlState extends State<ClawControl> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.15),
+                color: Colors.grey.withValues(alpha: 0.15),
                 blurRadius: 12,
                 offset: const Offset(0, 8),
               ),
@@ -80,38 +88,55 @@ class _ClawControlState extends State<ClawControl> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onTap: _onTap,
+                  onTap: isProcessing ? null : _onTap,
                   child: Container(
                     width: 220,
                     height: 220,
                     decoration: BoxDecoration(
-                      color: isProcessing()
-                          ? getBaseColor().withAlpha(128)
+                      color: isProcessing
+                          ? getBaseColor().withValues(alpha: 0.5)
                           : getBaseColor(),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
                       ],
                     ),
                     child: Center(
-                      child: Text(
-                        getButtonText(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            getMainText(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (!isProcessing)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                getActionText(),
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 32),
                 Opacity(
-                  opacity: isProcessing() ? 1.0 : 0.0,
+                  opacity: isProcessing ? 1.0 : 0.0,
                   child: const CircularProgressIndicator(
                     strokeWidth: 6,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),

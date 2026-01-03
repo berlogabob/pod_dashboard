@@ -36,7 +36,6 @@ class _NetworkPanelState extends State<NetworkPanel> {
         final data = event.snapshot.value as Map<Object?, Object?>?;
         if (data == null) return;
 
-        int timestamp = data['timestamp'] as int? ?? 0;
         final settings = data['settings'] as Map<Object?, Object?>?;
         final conn = settings?['connection_package'] as Map<Object?, Object?>?;
         int interval = conn?['send_interval'] as int? ?? 5;
@@ -78,7 +77,7 @@ class _NetworkPanelState extends State<NetworkPanel> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
+            color: Colors.grey.withValues(alpha: 0.15),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
