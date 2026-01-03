@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/gesture_status.dart';
+import 'package:pod_dashboard/gesture_camera/gesture_status.dart';
 
 class StatusOverlay extends StatelessWidget {
   final GestureStatus status;

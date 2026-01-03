@@ -10,7 +10,7 @@ class GestureThresholds {
 }
 
 class AppConstants {
-  static const int requiredStableFrames = 10;
+  static const int requiredStableFrames = 3;  // lower for faster testing
   static const int frameSkipCount = 1;
   static const double gestureYOffset = -20.0;
   static const double emojiSize = 150.0;

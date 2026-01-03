@@ -1,24 +1,44 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-import '../pages/gesture_camera_page.dart'; // Import the page
-import '../main.dart';
+import 'gesture_camera/gesture_camera_page.dart';
 
-class GestureControl extends StatelessWidget {
+class GestureControl extends StatefulWidget {
   final DatabaseReference clawPodRef;
 
   const GestureControl({super.key, required this.clawPodRef});
 
-  void _openCamera(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GestureCameraPage(
-          clawPodRef: clawPodRef,
-          cameras: cameras,
+  @override
+  State<GestureControl> createState() => _GestureControlState();
+}
+
+class _GestureControlState extends State<GestureControl> {
+  bool isLoading = false;
+
+  Future<void> _openGestureCamera() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final status = await Permission.camera.request();
+    if (status.isGranted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => GestureCameraPage(clawPodRef: widget.clawPodRef),
         ),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera permission needed for gestures')),
+      );
+    }
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -30,7 +50,7 @@ class GestureControl extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.15),
+            color: Colors.grey.withOpacity(0.15),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -41,24 +61,23 @@ class GestureControl extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Gesture Control',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Gesture Control',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading ? null : _openGestureCamera,
+                  child: Text(isLoading ? 'Opening...' : 'Enable'),
+                ),
+              ],
             ),
-            const SizedBox(height: 32),
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: () => _openCamera(context),
-                icon: const Icon(Icons.camera_alt, size: 32),
-                label: const Text(
-                  'Start Gesture Detection',
-                  style: TextStyle(fontSize: 18),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-                ),
-              ),
+            const SizedBox(height: 16),
+            const Text(
+              'Open camera and use hand gestures:\n👍 Unlock pod\n👎 Lock pod\n👌 (shown but no action)',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),
