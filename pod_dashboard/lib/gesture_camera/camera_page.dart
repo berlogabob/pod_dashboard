@@ -180,6 +180,9 @@ class _CameraHomePageState extends State<CameraHomePage> {
       } else if (detectedGesture == GestureStatus.thumbsDown && widget.clawPodRef != null) {
         widget.clawPodRef!.child('lock_state').set(1);
         print('Firebase: lock (1)');
+      } else if (detectedGesture == GestureStatus.ok && widget.clawPodRef != null) {
+        widget.clawPodRef!.child('lock_state').set(0);  // STOP / cancel movement
+        print('Firebase: STOP command (0)');
       }
     }
 
