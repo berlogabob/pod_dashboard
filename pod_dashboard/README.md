@@ -41,3 +41,22 @@ pod_dashboard/
 ├── pubspec.yaml                              # ← UPDATED with new dependencies
 └── assets/                                   # you can now delete hand_gesture.html
 ```
+
+## pod_dashboard
+```
+pod_dashboard/
+├── lib/
+│   ├── side_menu.dart
+│   ├── top_bar.dart
+│   ├── pod_content.dart
+│   ├── online_chip.dart
+│   ├── claw_control.dart
+│   ├── sensor_box.dart
+│   ├── status_panel.dart
+│   ├── light_settings.dart
+│   ├── network_panel.dart
+│   ├── timestamp.dart
+│   ├── wifi_switch.dart
+│   ├── remote_actions.dart
+│   ├── pod_header.dart
+│   ├── sensor_grid.dart

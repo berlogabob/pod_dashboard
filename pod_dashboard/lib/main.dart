@@ -8,6 +8,7 @@ import 'pod_content.dart';
 import 'online_chip.dart';
 import 'claw_control.dart';
 import 'gesture_control.dart';
+import 'gesture_camera_test_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/dashboard': (context) => const DashboardPage(),
         '/parking_spot': (context) => const ParkingSpotPage(),
+       // '/test_camera': (context) => GestureCameraTestPage(),
       },
     );
   }
@@ -64,6 +66,12 @@ class DashboardPage extends StatelessWidget {
               child: Column(
                 children: [
                   TopBar(smallScreen: isPhonePortrait),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/test_camera');
+                    },
+                    child: const Text('TEST GESTURE CAMERA FULLSCREEN'),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: isPhonePortrait
@@ -80,17 +88,21 @@ class DashboardPage extends StatelessWidget {
                               const SizedBox(height: 8),
                               Row(
                                 children: const [
-                                  Icon(Icons.star_border, size: 20, color: Colors.grey),
+                                  Icon(Icons.star_border,
+                                      size: 20, color: Colors.grey),
                                   SizedBox(width: 8),
-                                  Text('IADE Central Hub', style: TextStyle(color: Colors.grey)),
+                                  Text('IADE Central Hub',
+                                      style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Row(
                                 children: const [
-                                  Icon(Icons.description_outlined, size: 20, color: Colors.grey),
+                                  Icon(Icons.description_outlined,
+                                      size: 20, color: Colors.grey),
                                   SizedBox(width: 8),
-                                  Text('Firmware: v2.3.1', style: TextStyle(color: Colors.grey)),
+                                  Text('Firmware: v2.3.1',
+                                      style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
                               const SizedBox(height: 8),
@@ -113,13 +125,17 @@ class DashboardPage extends StatelessWidget {
                                   const SizedBox(height: 8),
                                   Row(
                                     children: const [
-                                      Icon(Icons.star_border, size: 20, color: Colors.grey),
+                                      Icon(Icons.star_border,
+                                          size: 20, color: Colors.grey),
                                       SizedBox(width: 8),
-                                      Text('IADE Central Hub', style: TextStyle(color: Colors.grey)),
+                                      Text('IADE Central Hub',
+                                          style: TextStyle(color: Colors.grey)),
                                       SizedBox(width: 20),
-                                      Icon(Icons.description_outlined, size: 20, color: Colors.grey),
+                                      Icon(Icons.description_outlined,
+                                          size: 20, color: Colors.grey),
                                       SizedBox(width: 8),
-                                      Text('Firmware: v2.3.1', style: TextStyle(color: Colors.grey)),
+                                      Text('Firmware: v2.3.1',
+                                          style: TextStyle(color: Colors.grey)),
                                     ],
                                   ),
                                 ],
