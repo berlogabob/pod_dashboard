@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import 'gesture_camera/gesture_camera_page.dart';
 
 class GestureControl extends StatefulWidget {
   final DatabaseReference clawPodRef;
@@ -12,31 +14,31 @@ class GestureControl extends StatefulWidget {
 }
 
 class _GestureControlState extends State<GestureControl> {
-  bool isEnabled = false;
-  late WebViewController controller;
+  bool isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
+  Future<void> _openGestureCamera() async {
+    setState(() {
+      isLoading = true;
+    });
 
-    controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
-      ..addJavaScriptChannel(
-        'gestureHandler',
-        onMessageReceived: (JavaScriptMessage message) {
-          String gesture = message.message;
-          if (gesture == 'thumbs_up') {
-            widget.clawPodRef.child('lock_state').set(3);
-          } else if (gesture == 'thumbs_down') {
-            widget.clawPodRef.child('lock_state').set(1);
-          }
-        },
+    final status = await Permission.camera.request();
+    if (status.isGranted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => GestureCameraPage(clawPodRef: widget.clawPodRef),
+        ),
       );
-  }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera permission needed for gestures')),
+      );
+    }
 
-  void _loadCamera() {
-    controller.loadFlutterAsset('assets/hand_gesture.html');
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -67,25 +69,16 @@ class _GestureControlState extends State<GestureControl> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      isEnabled = !isEnabled;
-                      if (isEnabled) {
-                        _loadCamera();
-                      }
-                    });
-                  },
-                  child: Text(isEnabled ? 'Disable' : 'Enable'),
+                  onPressed: isLoading ? null : _openGestureCamera,
+                  child: Text(isLoading ? 'Opening...' : 'Enable'),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            if (isEnabled)
-              SizedBox(
-                width: 300,
-                height: 300,
-                child: WebViewWidget(controller: controller),
-              ),
+            const Text(
+              'Open camera and use hand gestures:\n👍 Unlock pod\n👎 Lock pod\n👌 (shown but no action)',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
           ],
         ),
       ),
