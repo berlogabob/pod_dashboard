@@ -1,5 +1,8 @@
 // Pod_01_Claw_01.ino - Storage pod with servo claw and limit switches
 // Updated version with reliable WiFi connection (home + hotspot)
+// + Firebase-controlled direction reverse
+// + Improved limit switch handling: stops servo immediately on target limit OR timeout (prevents stalling)
+// + Asymmetric logic preserved for closing: only confirms "closed" if limit hit; timeout = failed close → remain open
 
 #include <ESP32Servo.h>
 #include <WiFi.h>
@@ -40,6 +43,7 @@ Servo clawServo;
 
 // ==================== Settings from Firebase ====================
 int stop_adjust = 0;           // default 0, will be updated from Firebase
+int direction_reverse = 0;     // 0 = normal, 1 = reversed (default 1 for your new hardware)
 int opening_time_sec = 5;
 int closing_time_sec = 5;
 
@@ -117,9 +121,10 @@ void setup() {
   ensurePath("open_switch", 0);
   ensurePath("open_cycles", 0);
   ensurePath("occupancy", 0);
-  ensurePath("stop_adjust", 6);       // default as you wanted
+  ensurePath("stop_adjust", 6);
   ensurePath("opening_time_sec", 5);
   ensurePath("closing_time_sec", 5);
+  ensurePath("direction_reverse", 1);  // default reversed for your new hardware
 
   // Read initial values
   int val;
@@ -129,9 +134,11 @@ void setup() {
   if (getFBInt("stop_adjust", val)) stop_adjust = val;
   if (getFBInt("opening_time_sec", val)) opening_time_sec = val;
   if (getFBInt("closing_time_sec", val)) closing_time_sec = val;
+  if (getFBInt("direction_reverse", val)) direction_reverse = val;
 
   Serial.println("Initial lock_state: " + String(lock_state));
   Serial.println("stop_adjust: " + String(stop_adjust));
+  Serial.println("direction_reverse: " + String(direction_reverse));
   applyStop();
 }
 
@@ -164,6 +171,11 @@ void loop() {
     if (getFBInt("closing_time_sec", new_val) && new_val != closing_time_sec) {
       closing_time_sec = new_val;
     }
+    if (getFBInt("direction_reverse", new_val) && new_val != direction_reverse) {
+      direction_reverse = new_val;
+      Serial.println("New direction_reverse = " + String(direction_reverse));
+      applyStop();  // brief stop if changing mid-movement
+    }
 
     last_read = millis();
   }
@@ -189,19 +201,22 @@ void loop() {
   }
   last_open_pressed = open_pressed;
 
-  // Servo control
+  // Servo control - stops immediately on target limit switch OR safety timeout
   if (lock_state == 3) {  // closing
-    rotateCW();
+    rotateToClose();
     if (close_pressed) {
-      localStopAndClosed();
+      localStopAndClosed();                                      // success: confirmed closed
     } else if (millis() - process_start >= closing_time_sec * 1000UL) {
-      localStopAndOpen();
+      applyStop();
+      lock_state = 2;
+      setFBInt("lock_state", 2);
+      Serial.println("CLOSING TIMEOUT (no limit hit) → failed to close, remain state 2 (open)");
     }
   }
   else if (lock_state == 1) {  // opening
-    rotateCCW();
-    if (millis() - process_start >= opening_time_sec * 1000UL) {
-      localStopAndOpen();
+    rotateToOpen();
+    if (open_pressed || (millis() - process_start >= opening_time_sec * 1000UL)) {
+      localStopAndOpen();                                        // success: open (limit or timeout)
     }
   }
   else {
@@ -223,8 +238,29 @@ void applyStop() {
   clawServo.write(90 + stop_adjust);
 }
 
-void rotateCW() { clawServo.write(0); }    // change to 180 if direction is wrong
-void rotateCCW() { clawServo.write(180); }
+void rotateToClose() {
+  clawServo.write(direction_reverse ? 180 : 0);  // closing direction
+}
+
+void rotateToOpen() {
+  clawServo.write(direction_reverse ? 0 : 180);   // opening direction
+}
+
+void localStopAndClosed() {
+  applyStop();
+  lock_state = 0;
+  open_cycles = 0;
+  setFBInt("lock_state", 0);
+  setFBInt("open_cycles", 0);
+  Serial.println("Reached closed (limit hit) → state 0");
+}
+
+void localStopAndOpen() {
+  applyStop();
+  lock_state = 2;
+  setFBInt("lock_state", 2);
+  Serial.println("Reached open (limit or timeout) → state 2");
+}
 
 bool getFBInt(const String& path, int& value) {
   String full = basePath + path;
@@ -255,20 +291,4 @@ void setFBTimestamp(const String& path) {
   String full = basePath + path;
   unsigned long ts = millis() / 1000;
   Firebase.RTDB.setInt(&fbdo, full.c_str(), ts);
-}
-
-void localStopAndClosed() {
-  applyStop();
-  lock_state = 0;
-  open_cycles = 0;
-  setFBInt("lock_state", 0);
-  setFBInt("open_cycles", 0);
-  Serial.println("LOCALLY CLOSED → state 0");
-}
-
-void localStopAndOpen() {
-  applyStop();
-  lock_state = 2;
-  setFBInt("lock_state", 2);
-  Serial.println("TIMEOUT → state 2 (open)");
 }

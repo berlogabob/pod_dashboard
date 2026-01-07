@@ -1,12 +1,22 @@
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
 
-// WiFi
-const char* ssid = "MEO-2hzF96460";
-const char* password = "FpxA9bv8";
+// ==================== Wi-Fi Networks ====================
+struct WiFiNetwork {
+  const char* ssid;
+  const char* password;
+};
+WiFiNetwork networks[] = {
+  {"MEO-2hzF96460", "FpxA9bv8"},    // home network
+  {"Nothing32", "212855625"}        // phone hotspot
+};
+const int numNetworks = 2;
 
-// Firebase
-#define FIREBASE_HOST "booking-ee47f-default-rtdb.europe-west1.firebasedatabase.app"
+// WiFi status LED (built-in on most ESP32 dev boards, e.g. GPIO2)
+const int wifiStatusLed = 2;
+
+// ==================== Firebase ====================
+#define FIREBASE_HOST "https://booking-ee47f-default-rtdb.europe-west1.firebasedatabase.app"
 #define FIREBASE_AUTH "m3uCFaiui2EXuQdpZGuuIgwgarKXH5lojbhUgF5b"
 
 // Имя устройства
@@ -64,6 +74,41 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+// ==================== Robust WiFi Connection ====================
+void connectToWiFi() {
+  pinMode(wifiStatusLed, OUTPUT);
+  digitalWrite(wifiStatusLed, LOW);
+
+  while (true) { // try forever until connected
+    for (int i = 0; i < numNetworks; i++) {
+      Serial.print("Trying WiFi: ");
+      Serial.println(networks[i].ssid);
+      WiFi.begin(networks[i].ssid, networks[i].password);
+      unsigned long startTime = millis();
+      while (millis() - startTime < 15000) { // 15 second timeout per network
+        digitalWrite(wifiStatusLed, !digitalRead(wifiStatusLed)); // fast blink
+        delay(200);
+        if (WiFi.status() == WL_CONNECTED) {
+          digitalWrite(wifiStatusLed, HIGH); // steady on when connected
+          Serial.println("");
+          Serial.println("Connected to " + String(networks[i].ssid));
+          Serial.print("IP address: ");
+          Serial.println(WiFi.localIP());
+          return; // success – exit function
+        }
+      }
+      WiFi.disconnect();
+      Serial.println("Failed to connect to " + String(networks[i].ssid));
+    }
+    // All networks failed this round
+    Serial.println("No WiFi found. Retrying in 5 seconds...");
+    for (int i = 0; i < 25; i++) { // slow blink for 5 seconds
+      digitalWrite(wifiStatusLed, !digitalRead(wifiStatusLed));
+      delay(200);
+    }
+  }
+}
+
 // === Функция: Чтение одного датчика и запись в буфер ===
 void readAndStoreSensor(int pin, Reading buffer[], int index) {
   buffer[index].value = analogRead(pin);
@@ -78,12 +123,10 @@ void readAllSensors() {
     readAndStoreSensor(sensorPin1, buffer1, buffer_index);
     readAndStoreSensor(sensorPin2, buffer2, buffer_index);
     readAndStoreSensor(sensorPin3, buffer3, buffer_index);
-
     buffer_index = buffer_index + 1;
     if (buffer_index >= max_buffer_size) {
       buffer_index = 0;
     }
-
     last_sensor_read = now;
   }
 }
@@ -91,15 +134,13 @@ void readAllSensors() {
 // === Функция: Расчёт среднего за последние N секунд ===
 int calculateAverage(Reading buffer[], int window_seconds) {
   unsigned long now = millis();
-  unsigned long window_start = now - (window_seconds * 1000);
-
+  unsigned long window_start = now - (window_seconds * 1000UL);
   long sum = 0;
   int count = 0;
-  int i;
-  for (i = 0; i < max_buffer_size; i++) {
+  for (int i = 0; i < max_buffer_size; i++) {
     if (buffer[i].timestamp >= window_start && buffer[i].timestamp > 0) {
-      sum = sum + buffer[i].value;
-      count = count + 1;
+      sum += buffer[i].value;
+      count++;
     }
   }
   if (count == 0) return 0;
@@ -117,21 +158,17 @@ int calculateWeightedAverage(int a0, int a1, int a2, int a3) {
 void controlLED(int weighted_avg) {
   int brightness = 0;
   if (manual_override == 1) {
-    if (manual_toggle == 1) {
-      brightness = 255;
-    } else {
-      brightness = 0;
-    }
+    brightness = (manual_toggle == 1) ? 255 : 0;
   } else {
     if (weighted_avg < light_threshold) {
-      brightness = (light_threshold - weighted_avg) * 255 / (light_threshold - min_light);
-      if (brightness < 0) brightness = 0;
-      if (brightness > 255) brightness = 255;
+      int denominator = light_threshold - min_light;
+      if (denominator <= 0) denominator = 1;
+      brightness = (light_threshold - weighted_avg) * 255 / denominator;
+      brightness = constrain(brightness, 0, 255);
 
       int error = target_light - weighted_avg;
-      brightness = brightness + error / 20;
-      if (brightness < 0) brightness = 0;
-      if (brightness > 255) brightness = 255;
+      brightness += error / 20;
+      brightness = constrain(brightness, 0, 255);
     }
   }
   ledcWrite(ledPin, brightness);
@@ -142,27 +179,30 @@ void controlLED(int weighted_avg) {
 void readSettingsFromFirebase() {
   unsigned long now = millis();
   if (now - last_settings_read >= 10000) {
-    String light_path = "devices/" + device_id + "/settings/light_mapping/";
-    String conn_path = "devices/" + device_id + "/settings/connection_package/";
-    String mode_path = "devices/" + device_id + "/settings/light_mode/";
+    String base_path = "/devices/" + device_id + "/";
+    String light_path = base_path + "settings/light_mapping/";
+    String conn_path = base_path + "settings/connection_package/";
+    String mode_path = base_path + "settings/light_mode/";
     String weights_path = light_path + "sensor_weights/";
 
-    Firebase.RTDB.getInt(&fbdo, light_path + "min_light", &min_light);
-    Firebase.RTDB.getInt(&fbdo, light_path + "target_light", &target_light);
-    Firebase.RTDB.getInt(&fbdo, light_path + "light_threshold", &light_threshold);
+    if (Firebase.RTDB.getInt(&fbdo, light_path + "min_light")) min_light = fbdo.intData();
+    if (Firebase.RTDB.getInt(&fbdo, light_path + "target_light")) target_light = fbdo.intData();
+    if (Firebase.RTDB.getInt(&fbdo, light_path + "light_threshold")) light_threshold = fbdo.intData();
 
-    Firebase.RTDB.getFloat(&fbdo, weights_path + "sensor0_weight", &sensor0_weight);
-    Firebase.RTDB.getFloat(&fbdo, weights_path + "sensor1_weight", &sensor1_weight);
-    Firebase.RTDB.getFloat(&fbdo, weights_path + "sensor2_weight", &sensor2_weight);
-    Firebase.RTDB.getFloat(&fbdo, weights_path + "sensor3_weight", &sensor3_weight);
+    if (Firebase.RTDB.getFloat(&fbdo, weights_path + "sensor0_weight")) sensor0_weight = fbdo.floatData();
+    if (Firebase.RTDB.getFloat(&fbdo, weights_path + "sensor1_weight")) sensor1_weight = fbdo.floatData();
+    if (Firebase.RTDB.getFloat(&fbdo, weights_path + "sensor2_weight")) sensor2_weight = fbdo.floatData();
+    if (Firebase.RTDB.getFloat(&fbdo, weights_path + "sensor3_weight")) sensor3_weight = fbdo.floatData();
 
-    Firebase.RTDB.getInt(&fbdo, conn_path + "send_interval", &send_interval);
-    Firebase.RTDB.getInt(&fbdo, conn_path + "qty_reading_sensors_in_second", &qty_reading_sensors_in_second);
-    Firebase.RTDB.getInt(&fbdo, conn_path + "sensor_buffer_time", &sensor_buffer_time);
+    if (Firebase.RTDB.getInt(&fbdo, conn_path + "send_interval")) send_interval = fbdo.intData();
+    if (Firebase.RTDB.getInt(&fbdo, conn_path + "qty_reading_sensors_in_second")) qty_reading_sensors_in_second = fbdo.intData();
+    if (Firebase.RTDB.getInt(&fbdo, conn_path + "sensor_buffer_time")) sensor_buffer_time = fbdo.intData();
 
-    Firebase.RTDB.getInt(&fbdo, mode_path + "manual_override", &manual_override);
-    Firebase.RTDB.getInt(&fbdo, mode_path + "manual_toggle", &manual_toggle);
+    if (Firebase.RTDB.getInt(&fbdo, mode_path + "manual_override")) manual_override = fbdo.intData();
+    if (Firebase.RTDB.getInt(&fbdo, mode_path + "manual_toggle")) manual_toggle = fbdo.intData();
 
+    // Защита от некорректных значений
+    if (qty_reading_sensors_in_second <= 0) qty_reading_sensors_in_second = 10;
     read_delay = 1000 / qty_reading_sensors_in_second;
     if (read_delay < 10) read_delay = 10;
 
@@ -173,14 +213,14 @@ void readSettingsFromFirebase() {
 // === Функция: Отправка данных в Firebase ===
 void sendDataToFirebase(int weighted_avg, int avg0, int avg1, int avg2, int avg3) {
   unsigned long now = millis();
-  if (now - last_send >= (send_interval * 1000)) {
-    String base_path = "devices/" + device_id + "/";
+  if (now - last_send >= (send_interval * 1000UL)) {
+    String base_path = "/devices/" + device_id + "/";
+    String sensors_data_path = base_path + "sensors/sensors_data/";
 
     Firebase.RTDB.setInt(&fbdo, base_path + "avg_light", weighted_avg);
     Firebase.RTDB.setInt(&fbdo, base_path + "brightness", current_brightness);
     Firebase.RTDB.setInt(&fbdo, base_path + "timestamp", now / 1000);
 
-    String sensors_data_path = base_path + "sensors/sensors_data/";
     Firebase.RTDB.setInt(&fbdo, sensors_data_path + "sensor0", avg0);
     Firebase.RTDB.setInt(&fbdo, sensors_data_path + "sensor1", avg1);
     Firebase.RTDB.setInt(&fbdo, sensors_data_path + "sensor2", avg2);
@@ -194,27 +234,17 @@ void sendDataToFirebase(int weighted_avg, int avg0, int avg1, int avg2, int avg3
 void setup() {
   Serial.begin(115200);
 
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("WiFi connected");
+  // Robust WiFi connection (tries both networks forever until success)
+  connectToWiFi();
 
-  ledcAttach(ledPin, 5000, 8);
+  // PWM setup for ESP32 Arduino core 3.x
+  ledcAttach(ledPin, 5000, 8);  // attach pin, 5000 Hz, 8-bit resolution
 
-  // Буфер нулями
-  int i;
-  for (i = 0; i < max_buffer_size; i++) {
-    buffer0[i].value = 0;
-    buffer0[i].timestamp = 0;
-    buffer1[i].value = 0;
-    buffer1[i].timestamp = 0;
-    buffer2[i].value = 0;
-    buffer2[i].timestamp = 0;
-    buffer3[i].value = 0;
-    buffer3[i].timestamp = 0;
-  }
+  // Инициализация буферов
+  memset(buffer0, 0, sizeof(buffer0));
+  memset(buffer1, 0, sizeof(buffer1));
+  memset(buffer2, 0, sizeof(buffer2));
+  memset(buffer3, 0, sizeof(buffer3));
 
   // Firebase
   config.database_url = FIREBASE_HOST;
@@ -227,13 +257,9 @@ void setup() {
 
 // === loop ===
 void loop() {
-  unsigned long now = millis();
-
   readAllSensors();
-
   readSettingsFromFirebase();
 
-  // Расчёт средних за окно
   int avg0 = calculateAverage(buffer0, sensor_buffer_time);
   int avg1 = calculateAverage(buffer1, sensor_buffer_time);
   int avg2 = calculateAverage(buffer2, sensor_buffer_time);
@@ -242,8 +268,7 @@ void loop() {
   int weighted_avg = calculateWeightedAverage(avg0, avg1, avg2, avg3);
 
   controlLED(weighted_avg);
-
   sendDataToFirebase(weighted_avg, avg0, avg1, avg2, avg3);
 
-  delayMicroseconds(1000);  // 1 мс
+  delayMicroseconds(1000); // ~1 мс задержка
 }
