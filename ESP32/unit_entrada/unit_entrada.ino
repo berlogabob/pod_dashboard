@@ -4,8 +4,8 @@
 #include <Firebase_ESP_Client.h>
 
 // WiFi
-const char* ssid = "MEO-2hzF96460";
-const char* password = "FpxA9bv8";
+const char* ssid = "Nothing32";
+const char* password = "212855625";
 
 // Firebase
 #define FIREBASE_HOST "booking-ee47f-default-rtdb.europe-west1.firebasedatabase.app"

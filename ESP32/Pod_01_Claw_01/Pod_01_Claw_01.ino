@@ -1,14 +1,10 @@
 // Pod_01_Claw_01.ino - Storage pod with servo claw and limit switches
-// Updated version with reliable WiFi connection (home + hotspot)
-// + Firebase-controlled direction reverse
-// + Improved limit switch handling: stops servo immediately on target limit OR timeout (prevents stalling)
-// + Asymmetric logic preserved for closing: only confirms "closed" if limit hit; timeout = failed close → remain open
 
 #include <ESP32Servo.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
 
-// ==================== Wi-Fi Networks ====================
+//  Wi-Fi Networks 
 struct WiFiNetwork {
   const char* ssid;
   const char* password;
@@ -23,7 +19,7 @@ const int numNetworks = 2;
 // WiFi status LED (built-in on most ESP32 boards)
 const int wifiStatusLed = 2;
 
-// ==================== Firebase ====================
+//  Firebase 
 #define FIREBASE_HOST "booking-ee47f-default-rtdb.europe-west1.firebasedatabase.app"
 #define FIREBASE_AUTH "m3uCFaiui2EXuQdpZGuuIgwgarKXH5lojbhUgF5b"
 
@@ -34,20 +30,20 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-// ==================== Pins ====================
+//  Pins 
 const int servoPin = 13;
 const int closeSwitchPin = 14;  // NC: HIGH when fully closed
 const int openSwitchPin = 15;   // NC: HIGH when fully open
 
 Servo clawServo;
 
-// ==================== Settings from Firebase ====================
+//  Settings from Firebase 
 int stop_adjust = 0;           // default 0, will be updated from Firebase
 int direction_reverse = 0;     // 0 = normal, 1 = reversed (default 1 for your new hardware)
 int opening_time_sec = 5;
 int closing_time_sec = 5;
 
-// ==================== State ====================
+//  State 
 int lock_state = 0;            // 0=closed, 1=opening, 2=open, 3=closing
 bool last_close_pressed = false;
 bool last_open_pressed = false;
@@ -55,7 +51,7 @@ int open_cycles = 0;
 int occupancy = 0;
 unsigned long process_start = 0;
 
-// ==================== WiFi Connection Function ====================
+//  WiFi Connection Function 
 void connectToWiFi() {
   pinMode(wifiStatusLed, OUTPUT);
   
@@ -71,7 +67,7 @@ void connectToWiFi() {
         digitalWrite(wifiStatusLed, !digitalRead(wifiStatusLed));  // fast blink
         delay(200);
 
-        if (WiFi.status() == WL_CONNECTED) {
+        if (WiFi.status()  WL_CONNECTED) {
           digitalWrite(wifiStatusLed, HIGH);  // steady on
           Serial.println("");
           Serial.println("Connected to " + String(networks[i].ssid));
@@ -94,7 +90,7 @@ void connectToWiFi() {
   }
 }
 
-// ==================== Setup ====================
+//  Setup 
 void setup() {
   Serial.begin(115200);
 
@@ -142,7 +138,7 @@ void setup() {
   applyStop();
 }
 
-// ==================== Loop ====================
+//  Loop 
 void loop() {
   // Read lock_state from Firebase every 2 seconds
   static unsigned long last_read = 0;
@@ -151,7 +147,7 @@ void loop() {
     if (getFBInt("lock_state", fb_state)) {
       if (fb_state >= 0 && fb_state <= 3 && fb_state != lock_state) {
         lock_state = fb_state;
-        if (lock_state == 1 || lock_state == 3) {
+        if (lock_state  1 || lock_state  3) {
           process_start = millis();
           Serial.println("Start process, state = " + String(lock_state));
         }
@@ -181,8 +177,8 @@ void loop() {
   }
 
   // Read switches
-  bool close_pressed = (digitalRead(closeSwitchPin) == HIGH);
-  bool open_pressed = (digitalRead(openSwitchPin) == HIGH);
+  bool close_pressed = (digitalRead(closeSwitchPin)  HIGH);
+  bool open_pressed = (digitalRead(openSwitchPin)  HIGH);
   setFBInt("limit_switch", close_pressed ? 1 : 0);
   setFBInt("open_switch", open_pressed ? 1 : 0);
 
@@ -202,7 +198,7 @@ void loop() {
   last_open_pressed = open_pressed;
 
   // Servo control - stops immediately on target limit switch OR safety timeout
-  if (lock_state == 3) {  // closing
+  if (lock_state  3) {  // closing
     rotateToClose();
     if (close_pressed) {
       localStopAndClosed();                                      // success: confirmed closed
@@ -213,7 +209,7 @@ void loop() {
       Serial.println("CLOSING TIMEOUT (no limit hit) → failed to close, remain state 2 (open)");
     }
   }
-  else if (lock_state == 1) {  // opening
+  else if (lock_state  1) {  // opening
     rotateToOpen();
     if (open_pressed || (millis() - process_start >= opening_time_sec * 1000UL)) {
       localStopAndOpen();                                        // success: open (limit or timeout)
@@ -233,7 +229,7 @@ void loop() {
   delay(50);
 }
 
-// ==================== Helper Functions ====================
+//  Helper Functions 
 void applyStop() {
   clawServo.write(90 + stop_adjust);
 }
