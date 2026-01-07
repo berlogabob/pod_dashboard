@@ -1,24 +1,20 @@
 {
   "devices": {
     "Pod_01_Claw_01": {
-      "raw_value": 2396,
-      "rtc": 23.96805,
-      "settings": {
-        "connection_package": {
-          "noise_amount": 1.5,
-          "send_interval": 1,
-          "sensor_buffer_time": 1,
-          "sin_amplitude": 8,
-          "sin_period_minutes": 60,
-          "temp_coefficient": 3
-        }
-      },
-      "temperature": 23.96805,
-      "timestamp": 10844
+      "closing_time_sec": 30,
+      "direction_reverse": 1,
+      "limit_switch": 1,
+      "lock_state": 0,
+      "occupancy": 48,
+      "open_cycles": 10,
+      "open_switch": 1,
+      "opening_time_sec": 30,
+      "stop_adjust": 6,
+      "timestamp": 148
     },
     "Pod_01_base_01": {
-      "avg_light": 1063,
-      "brightness": 0,
+      "avg_light": 0,
+      "brightness": 255,
       "locker": {
         "door": 1,
         "spot": 1
@@ -37,34 +33,39 @@
           "sensor3": 1
         },
         "sensors_data": {
-          "sensor0": 131,
-          "sensor1": 4095,
-          "sensor2": 4,
-          "sensor3": 23
+          "sensor0": 0,
+          "sensor1": 0,
+          "sensor2": 0,
+          "sensor3": 0
         }
       },
       "settings": {
         "connection_package": {
           "qty_reading_sensors_in_second": 10,
           "send_interval": 1,
-          "sensor_buffer_time": 10
+          "sensor_buffer_time": 5
         },
         "light_mapping": {
-          "light_threshold": 1000,
-          "min_light": 100,
-          "target_light": 1000
+          "light_threshold": 1300,
+          "min_light": 300,
+          "target_light": 1200
         },
         "light_mode": {
           "manual_override": 0,
           "manual_toggle": 0
         }
       },
-      "timestamp": 15268
+      "timestamp": 193
     },
     "Pod_01_entrada_01": {
       "door_state": 0,
-      "spot_state": 1,
-      "timestamp": 10258
+      "settings": {
+        "connection_package": {
+          "send_interval": 10
+        }
+      },
+      "spot_state": 0,
+      "timestamp": 12705
     }
   }
 }
